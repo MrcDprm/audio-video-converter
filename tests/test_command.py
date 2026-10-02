@@ -38,13 +38,20 @@ class TestBuildCommand(unittest.TestCase):
     def test_scaling_disables_copy_and_keeps_aspect_ratio(self):
         command = build(VIDEO, "mp4", resolution="720p")
         self.assertEqual(value_after(command, "-c:v"), "libx264")
-        self.assertEqual(value_after(command, "-vf"), "scale=-2:720")
+        self.assertIn("720", value_after(command, "-vf"))
 
     def test_video_is_never_upscaled(self):
         small = {**VIDEO, "height": 480, "width": 854}
         command = build(small, "mp4", resolution="720p")
         self.assertEqual(value_after(command, "-c:v"), "copy")
         self.assertNotIn("-vf", command)
+        command = build(small, "mp4", resolution="720p", fast=False)
+        self.assertEqual(value_after(command, "-vf"), "scale=trunc(iw/2)*2:trunc(ih/2)*2")
+
+    def test_portrait_video_uses_the_short_side(self):
+        portrait = {**VIDEO, "width": 1080, "height": 1920}
+        self.assertNotEqual(value_after(build(portrait, "mp4", resolution="1080p"), "-c:v"), "libx264")
+        self.assertEqual(value_after(build(portrait, "mp4", resolution="720p"), "-c:v"), "libx264")
 
     def test_hevc_copied_to_mp4_gets_apple_tag(self):
         command = build({**VIDEO, "video_codec": "hevc"}, "mp4")

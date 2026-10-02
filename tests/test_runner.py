@@ -82,6 +82,20 @@ class TestRunner(unittest.TestCase):
                 self.assertEqual(result, "done")
                 self.assertEqual(probe(FFPROBE, target)["audio_codec"], codec)
 
+    def test_odd_size_and_portrait_video(self):
+        odd = self.folder / "odd.mkv"
+        portrait = self.folder / "portrait.mov"
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=640x360:duration=1",
+                        "-vf", "scale=641:361", "-c:v", "libx264rgb", str(odd)], check=True, creationflags=NO_WINDOW)
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-display_rotation", "90", "-i", str(self.video), "-c", "copy",
+                        str(portrait)], check=True, creationflags=NO_WINDOW)
+        for source, options, size in ((odd, {"fast": False}, (640, 360)), (portrait, {"resolution": "480p"}, (480, 854))):
+            with self.subTest(source=source.name):
+                result, target, _ = self.convert(source, "mp4", **options)
+                self.assertEqual(result, "done")
+                info = probe(FFPROBE, target)
+                self.assertEqual((info["width"], info["height"]), size)
+
     def test_cancel_removes_partial_file(self):
         info = probe(FFPROBE, self.long_video)
         target = output_path(self.long_video, "mkv")
