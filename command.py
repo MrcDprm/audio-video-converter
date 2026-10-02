@@ -30,8 +30,18 @@ def output_path(source, format_key, folder=None):
 
 
 def needs_scaling(info, resolution):
-    max_height = RESOLUTIONS[resolution]
-    return bool(max_height and info["height"] and info["height"] > max_height)
+    """Kısa kenar seçilen çözünürlükten büyükse küçültülür; dikey telefon videoları da böylece doğru ölçeklenir."""
+    target = RESOLUTIONS[resolution]
+    short_side = min(info["width"] or 0, info["height"] or 0)
+    return bool(target and short_side > target)
+
+
+def scale_filter(info, resolution):
+    if needs_scaling(info, resolution):
+        target = RESOLUTIONS[resolution]
+        # iw/ih döndürme bilgisi uygulandıktan sonraki boyutlardır; -2: diğer kenar orantılı ve çift sayı
+        return f"scale='if(gte(iw,ih),-2,{target})':'if(gte(iw,ih),{target},-2)'"
+    return "scale=trunc(iw/2)*2:trunc(ih/2)*2"  # H.264 tek sayılı genişlik ya da yüksekliği kabul etmez
 
 
 def video_arguments(info, output, quality, resolution, fast):
@@ -46,9 +56,7 @@ def video_arguments(info, output, quality, resolution, fast):
                      "-deadline", "good", "-cpu-used", "4", "-row-mt", "1"]
     else:
         arguments = ["-c:v", "libx264", "-preset", "medium", "-crf", str(settings["crf"])]
-    if needs_scaling(info, resolution):
-        arguments += ["-vf", f"scale=-2:{RESOLUTIONS[resolution]}"]  # -2: genişlik orantılı ve çift sayı
-    return arguments + ["-pix_fmt", "yuv420p"]  # her oynatıcının açabildiği renk biçimi
+    return arguments + ["-vf", scale_filter(info, resolution), "-pix_fmt", "yuv420p"]  # her oynatıcının açabildiği renk biçimi
 
 
 def audio_arguments(info, output, quality, fast):
