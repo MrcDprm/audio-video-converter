@@ -464,6 +464,8 @@ class ConverterApp:
                 self.events.put(("probed", item_id, probe(self.ffprobe, path), None))
             except ProbeError as error:
                 self.events.put(("probed", item_id, None, error.code))
+            except Exception:  # beklenmeyen hata işçiyi öldürmesin; dosya okunamadı sayılır
+                self.events.put(("probed", item_id, None, "not_media"))
 
     def poll_events(self):
         try:
@@ -530,6 +532,8 @@ class ConverterApp:
         self.render_state()
 
     def start_next(self):
+        if self.current:
+            return  # önceki dönüştürme hâlâ kapanıyor (Durdur'dan hemen sonra Dönüştür'e basıldı)
         ready = [item_id for item_id, item in self.items.items() if item["state"] == "ready"]
         if not ready:
             # Okunmayı bekleyen dosya varsa onları bekle; yoksa iş bitti
@@ -564,8 +568,15 @@ class ConverterApp:
         conversion = Conversion(command, target, item["info"]["duration"],
                                 lambda percent, remaining: self.events.put(("progress", item_id, percent, remaining)))
         self.current = (item_id, conversion)
-        threading.Thread(target=lambda: self.events.put(("finished", item_id, conversion.run())), daemon=True).start()
+        threading.Thread(target=self.convert_worker, args=(item_id, conversion), daemon=True).start()
         self.render_state()
+
+    def convert_worker(self, item_id, conversion):
+        try:
+            result = conversion.run()
+        except Exception:  # "bitti" olayı her durumda gelsin; yoksa kuyruk "dönüştürülüyor"da takılı kalır
+            result = "failed"
+        self.events.put(("finished", item_id, result))
 
     def stop(self):
         self.running = False
