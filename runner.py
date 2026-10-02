@@ -64,6 +64,8 @@ class Conversion:
                 self.on_progress(percent, remaining_seconds(percent, time.monotonic() - started))
         self.process.wait()
         reader.join(timeout=2)
+        self.process.stdout.close()  # borular kapatılmazsa her dönüşümde bir dosya tanıtıcısı açık kalır
+        self.process.stderr.close()        
 
         if self.cancelled:
             self._remove_partial_output()
