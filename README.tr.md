@@ -146,14 +146,6 @@ Kurulum dosyası `installer/Output/` klasöründe oluşur.
 - **Üçüncü taraf bir aracı dağıtmak.** FFmpeg'i kurulum dosyasına gömdüm, indirmeyi SHA-256 özetiyle doğruladım, FFmpeg'in GPL lisansını ve kaynak kodu linkini de yanına koydum. FFmpeg ayrı bir program olarak çalıştığı için kendi kodum MIT lisanslı kalıyor.
 - **Gerçek araçla test etmek.** Birim testlerin yanında, küçük test videolarını FFmpeg'in kendisiyle üretip gerçekten dönüştürüyorum; ortada durdurmak da dahil.
 
-## Gelecek Planları
-
-- Kırpma (başlangıç ve bitiş zamanı)
-- GIF çıktısı
-- Donanım hızlandırma (NVIDIA NVENC, Intel Quick Sync)
-- Altyazı gömme
-- macOS ve Linux paketleri
-
 ## Lisans
 
 [MIT](LICENSE) © 2026 Miraç Deprem
