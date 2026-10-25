@@ -146,14 +146,6 @@ The installer is created in the `installer/Output/` folder.
 - **Shipping a third-party tool.** I bundled FFmpeg with the installer, verified the download with a SHA-256 hash, and included FFmpeg's GPL license and source link, while my own code stays MIT because FFmpeg runs as a separate program.
 - **Testing with the real tool.** Besides unit tests, I generate small test videos with FFmpeg itself and convert them for real, including cancelling in the middle.
 
-## Future Plans
-
-- Trimming (start and end time)
-- GIF output
-- Hardware acceleration (NVIDIA NVENC, Intel Quick Sync)
-- Embedding subtitles
-- Packages for macOS and Linux
-
 ## License
 
 [MIT](LICENSE) © 2026 Miraç Deprem
